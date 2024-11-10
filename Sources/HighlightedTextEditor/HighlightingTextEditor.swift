@@ -113,7 +113,7 @@ extension HighlightingTextEditor {
 
             highlightRules.forEach { rule in
                 rule.formattingRules.forEach { formattingRule in
-                    let range = NSMakeRange(rule.index, rule.index)
+                    let range = NSMakeRange(rule.index, 1)
                     var font = SystemFontAlias()
                     highlightedString.enumerateAttributes(in: range, options: []) { attributes, _, _ in
                         let fontAttribute = attributes.first { $0.key == .font }!
@@ -133,7 +133,7 @@ extension HighlightingTextEditor {
                         range: range
                     )
                 }
-                        }
+            }
 
         return highlightedString
     }
