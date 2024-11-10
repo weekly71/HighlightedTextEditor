@@ -68,20 +68,20 @@ public struct TextFormattingRule {
 }
 
 public struct HighlightRule {
-    let pattern: NSRegularExpression
+    let index: Int
 
     let formattingRules: [TextFormattingRule]
 
     // ------------------- convenience ------------------------
 
-    public init(pattern: NSRegularExpression, formattingRule: TextFormattingRule) {
-        self.init(pattern: pattern, formattingRules: [formattingRule])
+    public init(index: Int, formattingRule: TextFormattingRule) {
+        self.init(index: index, formattingRules: [formattingRule])
     }
 
     // ------------------ most powerful initializer ------------------
 
-    public init(pattern: NSRegularExpression, formattingRules: [TextFormattingRule]) {
-        self.pattern = pattern
+    public init(index: Int, formattingRules: [TextFormattingRule]) {
+        self.index = index
         self.formattingRules = formattingRules
     }
 }
@@ -102,41 +102,38 @@ extension HighlightingTextEditor {
     var placeholderFont: SystemColorAlias { SystemColorAlias() }
 
     static func getHighlightedText(text: String, highlightRules: [HighlightRule]) -> NSMutableAttributedString {
-        let highlightedString = NSMutableAttributedString(string: text)
-        let all = NSRange(location: 0, length: text.utf16.count)
+            let highlightedString = NSMutableAttributedString(string: text)
+            let all = NSRange(location: 0, length: text.utf16.count)
 
-        let editorFont = defaultEditorFont
-        let editorTextColor = defaultEditorTextColor
+            let editorFont = defaultEditorFont
+            let editorTextColor = defaultEditorTextColor
 
-        highlightedString.addAttribute(.font, value: editorFont, range: all)
-        highlightedString.addAttribute(.foregroundColor, value: editorTextColor, range: all)
+            highlightedString.addAttribute(.font, value: editorFont, range: all)
+            highlightedString.addAttribute(.foregroundColor, value: editorTextColor, range: all)
 
-        highlightRules.forEach { rule in
-            let matches = rule.pattern.matches(in: text, options: [], range: all)
-            matches.forEach { match in
+            highlightRules.forEach { rule in
                 rule.formattingRules.forEach { formattingRule in
-
+                    let range = NSMakeRange(rule.index, rule.index)
                     var font = SystemFontAlias()
-                    highlightedString.enumerateAttributes(in: match.range, options: []) { attributes, _, _ in
+                    highlightedString.enumerateAttributes(in: range, options: []) { attributes, _, _ in
                         let fontAttribute = attributes.first { $0.key == .font }!
                         // swiftlint:disable:next force_cast
                         let previousFont = fontAttribute.value as! SystemFontAlias
                         font = previousFont.with(formattingRule.fontTraits)
                     }
-                    highlightedString.addAttribute(.font, value: font, range: match.range)
+                    highlightedString.addAttribute(.font, value: font, range: range)
 
-                    let matchRange = Range<String.Index>(match.range, in: text)!
+                    let matchRange = Range<String.Index>(range, in: text)!
                     let matchContent = String(text[matchRange])
                     guard let key = formattingRule.key,
                           let calculateValue = formattingRule.calculateValue else { return }
                     highlightedString.addAttribute(
                         key,
                         value: calculateValue(matchContent, matchRange),
-                        range: match.range
+                        range: range
                     )
                 }
-            }
-        }
+                        }
 
         return highlightedString
     }
