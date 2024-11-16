@@ -113,6 +113,9 @@ extension HighlightingTextEditor {
 
             highlightRules.forEach { rule in
                 rule.formattingRules.forEach { formattingRule in
+                    if rule.index + 1 > text.count {
+                        return
+                    }
                     let range = NSMakeRange(rule.index, 1)
                     var font = SystemFontAlias()
                     highlightedString.enumerateAttributes(in: range, options: []) { attributes, _, _ in
