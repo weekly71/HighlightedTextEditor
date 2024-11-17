@@ -102,41 +102,43 @@ extension HighlightingTextEditor {
     var placeholderFont: SystemColorAlias { SystemColorAlias() }
 
     static func getHighlightedText(text: String, highlightRules: [HighlightRule]) -> NSMutableAttributedString {
-            let highlightedString = NSMutableAttributedString(string: text)
-            let all = NSRange(location: 0, length: text.utf16.count)
+        let highlightedString = NSMutableAttributedString(string: NSString(string: text).replacingOccurrences(of: "ä", with: "a")
+            .replacingOccurrences(of: "ö", with: "o")
+            .replacingOccurrences(of: "ü", with: "u"))
+        let all = NSRange(location: 0, length: text.utf16.count)
 
-            let editorFont = defaultEditorFont
-            let editorTextColor = defaultEditorTextColor
+        let editorFont = defaultEditorFont
+        let editorTextColor = defaultEditorTextColor
 
-            highlightedString.addAttribute(.font, value: editorFont, range: all)
-            highlightedString.addAttribute(.foregroundColor, value: editorTextColor, range: all)
+        highlightedString.addAttribute(.font, value: editorFont, range: all)
+        highlightedString.addAttribute(.foregroundColor, value: editorTextColor, range: all)
 
-            highlightRules.forEach { rule in
-                rule.formattingRules.forEach { formattingRule in
-                    if rule.index + 1 > text.count {
-                        return
-                    }
-                    let range = NSMakeRange(rule.index, 1)
-                    var font = SystemFontAlias()
-                    highlightedString.enumerateAttributes(in: range, options: []) { attributes, _, _ in
-                        let fontAttribute = attributes.first { $0.key == .font }!
-                        // swiftlint:disable:next force_cast
-                        let previousFont = fontAttribute.value as! SystemFontAlias
-                        font = previousFont.with(formattingRule.fontTraits)
-                    }
-                    highlightedString.addAttribute(.font, value: font, range: range)
-
-                    let matchRange = Range<String.Index>(range, in: text)!
-                    let matchContent = String(text[matchRange])
-                    guard let key = formattingRule.key,
-                          let calculateValue = formattingRule.calculateValue else { return }
-                    highlightedString.addAttribute(
-                        key,
-                        value: calculateValue(matchContent, matchRange),
-                        range: range
-                    )
+        highlightRules.forEach { rule in
+            rule.formattingRules.forEach { formattingRule in
+                if rule.index + 1 > text.count {
+                    return
                 }
+                let range = NSMakeRange(rule.index, 1)
+                var font = SystemFontAlias()
+                highlightedString.enumerateAttributes(in: range, options: []) { attributes, _, _ in
+                    let fontAttribute = attributes.first { $0.key == .font }!
+                    // swiftlint:disable:next force_cast
+                    let previousFont = fontAttribute.value as! SystemFontAlias
+                    font = previousFont.with(formattingRule.fontTraits)
+                }
+                highlightedString.addAttribute(.font, value: font, range: range)
+
+                let matchRange = Range<String.Index>(range, in: text)!
+                let matchContent = String(text[matchRange])
+                guard let key = formattingRule.key,
+                      let calculateValue = formattingRule.calculateValue else { return }
+                highlightedString.addAttribute(
+                    key,
+                    value: calculateValue(matchContent, matchRange),
+                    range: range
+                )
             }
+        }
 
         return highlightedString
     }
